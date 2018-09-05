@@ -331,10 +331,10 @@ class LoginManager(object):
     def reload_user(self):
         ctx = _request_ctx_stack.top
         user_id = session.get("user_id", None)
-        if user_id is None:
+        if user_id is None: # 如果从 cookie 获取 user_id 字段为空，则是匿名用户
             ctx.user = self.anonymous_user()
         else:
-            user = self.user_callback(user_id)
+            user = self.user_callback(user_id)  # user_callback() 需要开发者实现
             if user is None:
                 logout_user()
             else:
@@ -413,11 +413,13 @@ def login_user(user, remember=False, force=False):
     :param remember: Whether to remember the user after their session expires.
     :param force: If the user is inactive, setting this to `True` will log
                   them in regardless.
+
+    用户登录函数
     """
     if (not force) and (not user.is_active()):
         return False
-    user_id = user.get_id()
-    session["user_id"] = user_id
+    user_id = user.get_id()         # get_id() 来自于 UserMixin，可以重写它
+    session["user_id"] = user_id    # 直接把 user_id 放在 cookie 里，没有进行加密
     session["_fresh"] = True
     if remember:
         session["remember"] = "set"
