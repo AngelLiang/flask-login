@@ -28,6 +28,7 @@ def _get_user():
 
 
 def _cookie_digest(payload, key=None):
+    """生成cookie签名（摘要）"""
     if key is None:
         key = current_app.config["SECRET_KEY"]
     payload = payload.encode("utf8")
@@ -41,6 +42,9 @@ def encode_cookie(payload):
     with the app's secret key.
     
     :param payload: The value to encode, as `unicode`.
+
+    cookie编码，组合payload和cooike的签名。
+    使用"|"作为分隔符。
     """
     return u"%s|%s" % (payload, _cookie_digest(payload))
 
@@ -51,12 +55,16 @@ def decode_cookie(cookie):
     cookie fails, `None` will be returned.
     
     :param cookie: An encoded cookie.
+
+    cookie解码，拆分payload和cookie签名，并判断签名是否正确。
     """
     try:
         payload, digest = cookie.rsplit(u"|", 1)
         digest = digest.encode("ascii")
     except ValueError:
         return None
+
+    # 判断签名是否一致
     if _cookie_digest(payload) == digest:
         return payload
     else:
@@ -341,7 +349,7 @@ class LoginManager(object):
                 ctx.user = user
     
     def _load_from_cookie(self, cookie):
-        if self.token_callback:
+        if self.token_callback:     # 如果有token回调函数则调用
             user = self.token_callback(cookie)
             if user is not None:
                 session["user_id"] = user.get_id()
