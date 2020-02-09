@@ -350,10 +350,13 @@ class LoginManager(object):
             has_cookie = (cookie_name in request.cookies and
                           session.get('remember') != 'clear')
             if has_cookie:
+                # 从 cookie 获取用户
                 return self._load_from_cookie(request.cookies[cookie_name])
             elif self.request_callback:
+                # 从 request 获取用户
                 return self._load_from_request(request)
             elif header_name in request.headers:
+                # 从 header 获取用户
                 return self._load_from_header(request.headers[header_name])
 
         return self.reload_user()
@@ -396,6 +399,7 @@ class LoginManager(object):
             user_loaded_from_cookie.send(app, user=_get_user())
 
     def _load_from_header(self, header):
+        """从 header 加载"""
         user = None
         if self.header_callback:
             user = self.header_callback(header)
@@ -407,6 +411,7 @@ class LoginManager(object):
             self.reload_user()
 
     def _load_from_request(self, request):
+        """从 request 加载"""
         user = None
         if self.request_callback:
             user = self.request_callback(request)
@@ -418,6 +423,7 @@ class LoginManager(object):
             self.reload_user()
 
     def _update_remember_cookie(self, response):
+        """更新“记住我”cookie"""
         # Don't modify the session unless there's something to do.
         if 'remember' not in session and \
                 current_app.config.get('REMEMBER_COOKIE_REFRESH_EACH_REQUEST'):
