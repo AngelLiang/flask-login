@@ -34,6 +34,7 @@ def encode_cookie(payload):
     :param payload: The value to encode, as `unicode`.
     :type payload: unicode
     '''
+    # 拼接 payload 和 cookie 摘要，没有进行加密
     return u'{0}|{1}'.format(payload, _cookie_digest(payload))
 
 
@@ -53,6 +54,7 @@ def decode_cookie(cookie):
         return
 
     if safe_str_cmp(_cookie_digest(payload), digest):
+        # 生成 cookie 摘要并对比判断
         return payload
 
 
@@ -164,6 +166,7 @@ def login_user(user, remember=False, duration=None, force=False, fresh=True):
     session['_id'] = current_app.login_manager._session_identifier_generator()
 
     if remember:
+        # “记住我”功能
         session['remember'] = 'set'
         if duration is not None:
             try:
@@ -197,7 +200,7 @@ def logout_user():
 
     cookie_name = current_app.config.get('REMEMBER_COOKIE_NAME', COOKIE_NAME)
     if cookie_name in request.cookies:
-        session['remember'] = 'clear'
+        session['remember'] = 'clear'  # 清除“记住我”
         if 'remember_seconds' in session:
             session.pop('remember_seconds')
 
@@ -338,6 +341,7 @@ def _get_user():
 
 
 def _cookie_digest(payload, key=None):
+    """生成cookie摘要"""
     key = _secret_key(key)
 
     return hmac.new(key, payload.encode('utf-8'), sha512).hexdigest()
